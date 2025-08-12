@@ -108,3 +108,9 @@ function checkMatch() {
     }
     flippedCards = [];
 };
+
+// Save score
+function updateScoreboard() {
+    scoreboardDisplay.innerHTML ="<h3>Top Scores</h3>" + 
+    scoreboard.map((s, i) => `<div>${i + 1}.${s.grid}-${s.time}s, ${s.moves} moves</div>`);
+};
