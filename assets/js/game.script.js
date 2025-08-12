@@ -123,3 +123,12 @@ function updateScoreboard() {
     scoreboard.map((s, i) => `<div>${i + 1}.${s.grid}-${s.time}s, ${s.moves} moves</div>`);
 };
 
+
+// Difficulty change
+difficultyButtons.forEach(btn => {
+    btn.addEventListener("click", () =>{
+        gridCols = parseInt(btn.datasset.size);
+        gridRows = 4;
+        createBoard();
+    });
+});
