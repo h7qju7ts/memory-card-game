@@ -132,3 +132,6 @@ difficultyButtons.forEach(btn => {
         createBoard();
     });
 });
+
+// restart button
+restartButton.addEventListener("click", createBoard);
