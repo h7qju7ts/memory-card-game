@@ -56,4 +56,13 @@ body {
     transform: rotateY(180deg);
 }
 
+.card.matched .card-back {
+    background-color: #2ecc71;
+}
+
+.controls {
+    margin-bottom: 15px;
+}
+
+
 
