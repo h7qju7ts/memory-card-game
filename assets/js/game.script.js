@@ -110,7 +110,16 @@ function checkMatch() {
 };
 
 // Save score
+function saveScore(time, moves) {
+    scoreboard.push({time, moves, grid : `$gridCols`} x ${gridRows});
+    scoreboard.sort((a, b) => a.time - b.time || a.moves - b.moves);
+    if (scoreboard.lenght > 5) scoreboard.lenght = 5;
+};
+
+
+// Update scoreboard
 function updateScoreboard() {
     scoreboardDisplay.innerHTML ="<h3>Top Scores</h3>" + 
     scoreboard.map((s, i) => `<div>${i + 1}.${s.grid}-${s.time}s, ${s.moves} moves</div>`);
 };
+
