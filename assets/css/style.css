@@ -35,5 +35,16 @@ body {
     transform: rotateY(180deg);
 }
 
-
+/* Front and back face */
+.card-front, .card-back {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    backface-visibility: hidden;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+}
 
