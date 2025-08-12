@@ -7,6 +7,15 @@ body {
     text-align: center;
 }
 
+.instructions ol {
+  list-style-type: none; /* Removes the numbers */
+  padding-left: 0;       /* Removes default left padding */
+}
+
+.instructions li {
+  margin-bottom: 5px;    /* Adds spacing between steps */
+}
+
 .game-container {
     display: grid;
     gap: 15px;
