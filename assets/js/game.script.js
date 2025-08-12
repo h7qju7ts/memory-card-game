@@ -26,4 +26,14 @@ function shuffle(array) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
     }
-}
+};
+
+// timer function
+function startTimer() {
+    clearInterval(timerInterval);
+    timer - 0;
+    timerInterval = setInterval( () => {
+        timer++;
+        timerDisplay.textContent = `Time: ${timer}s`;
+    },1000);
+};
