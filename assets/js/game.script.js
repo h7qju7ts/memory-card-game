@@ -1,5 +1,5 @@
 const gameContainer = document.querySelector(".game-container");
-const statusText = docuument.querySelector(".status");
+const statusText = document.querySelector(".status");
 const restartButton = document.querySelector(".restart-btn");
 const timerDisplay = document.querySelector(".timer");
 const movesDisplay = document.querySelector(".moves");
@@ -67,4 +67,18 @@ function createBoard() {
     movesDisplay.textContent = `moves: ${moves}`;
     statusText.textContent = "Find all matching pairs!";
     startTimer();
+};
+
+// Flip card
+function flipCard() {
+    if (flippedCards.length > 2 || this.classList.contains("flipped") || this.classList.contains("matched")) return;
+
+    this.classList.add("flipped");
+    flippedCards.push(this);
+
+    if (flippedCards.length === 2) {
+          moves++;
+          movesDisplay.textContent = `moves: ${moves}`;
+          checkMatch();   
+    };
 };
