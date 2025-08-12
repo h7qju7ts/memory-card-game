@@ -6,3 +6,10 @@ body {
     padding: 20px;
     text-align: center;
 }
+
+.game-container {
+    display: grid;
+    gap: 15px;
+    justify-content: center;
+}
+
