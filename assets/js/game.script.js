@@ -82,3 +82,29 @@ function flipCard() {
           checkMatch();   
     };
 };
+
+// Match check
+function checkMatch() {
+    const [card1, card2] = flippedCards;
+
+    if (card1.dataset.symbol === card2.dataset.symbol) {
+        card1.classList.add("matched");
+        card2.classList.add("matched");
+        matchedCards.push(card1, card2);
+        statusText.textContent = "You found a match!";
+
+        if (matchedCards.lenght === gridCols * gridRows) {
+            clearInterval(timerInterval);
+            statusText.textContent = "&#127881; You won! &#127881;";
+            saveScore(timer, moves);
+            updateScoreboard();
+        }
+    } else {
+        statusText.textContent = "Not a match!";
+        setTimeout( () => {
+            card1.classLIst.remove("flipped");
+            card2.classList.remove("flipped");
+        }, 800);
+    }
+    flippedCards = [];
+};
