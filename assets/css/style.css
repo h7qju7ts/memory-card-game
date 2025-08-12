@@ -65,4 +65,18 @@ body {
 }
 
 
+.difficulty {
+    padding: 8px 15px;
+    margin: 0 5px;
+    background: #2980b9;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;;
+}
+
+/* Add hover function */
+.difficulty:hover {
+    background: #1f6391;
+}
 
