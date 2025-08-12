@@ -9,23 +9,20 @@ body {
 
 .instructions ol {
   list-style-type: none; /* Removes the numbers */
-  padding-left: 0;       /* Removes default left padding */
+  padding-left: 0;
 }
 
 .instructions li {
-  margin-bottom: 5px;    /* Adds spacing between steps */
+  margin-bottom: 5px;
 }
 
 .game-container {
     display: grid;
-    gap: 15px;
     justify-content: center;
 }
 
 /* Card container with perspective for 3D flip */
 .card {
-    width: 100px;
-    height: 100px;
     perspective: 600px;
     cursor: pointer;
 }
@@ -33,13 +30,11 @@ body {
 /* Inner card wrapper that will rotate */
 .card-inner {
     position: relative;
-    width: 100px;
-    height: 100px;
     transform-style: preserve-3d;
     transition: transform 0.6s;
 }
 
-/* When fliped, rotate 180 degrees */
+/* When flipped, rotate 180 degrees */
 .card.flipped .card-inner {
     transform: rotateY(180deg);
 }
@@ -47,14 +42,11 @@ body {
 /* Front and back face */
 .card-front, .card-back {
     position: absolute;
-    width: 100px;
-    height: 100px;
     backface-visibility: hidden;
     border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
 }
 
 .card-front {
@@ -73,7 +65,6 @@ body {
     margin-bottom: 15px;
 }
 
-
 .difficulty {
     padding: 8px 15px;
     margin: 0 5px;
@@ -81,11 +72,9 @@ body {
     color: white;
     border: none;
     border-radius: 6px;
-    cursor: pointer;;
+    cursor: pointer;
 }
 
-/* Add hover function */
 .difficulty:hover {
     background: #1f6391;
 }
-

@@ -1,4 +1,3 @@
-
 // ===1 get all DOM elements we need ===
 const gameContainer = document.querySelector(".game-container");     // where all the cards will be placed
 const statusText = document.querySelector(".status");                // text telling player what is happening
@@ -46,8 +45,17 @@ function startTimer() {
 
 // === 6 create the game board ===
 function createBoard() {
-    // Adjust grid layout in CSS dynamically
-    gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, 100px)`;
+    // Get container width
+    const containerWidth = gameContainer.clientWidth;
+    const gapSize = 10; // gap between cards (in px)
+    
+    // Calculate card size dynamically based on columns and gap
+    const cardSize = Math.floor((containerWidth - (gapSize * (gridCols - 1))) / gridCols);
+
+    // Apply dynamic grid layout
+    gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
+    gameContainer.style.gap = `${gapSize}px`;
+
     gameContainer.innerHTML = ""; // Clear old cards
 
     // Determine number of total cards and pick that many symbols
@@ -60,14 +68,19 @@ function createBoard() {
     cardSet.forEach(symbol => {
         const card = document.createElement("div");
         card.classList.add("card");
+        card.style.width = `${cardSize}px`;
+        card.style.height = `${cardSize}px`;
+
+        // Inner wrapper
         card.innerHTML = `
-            <div class="card-inner">
-                <div class="card-front"></div>               <!-- Hidden side -->
-                <div class="card-back">${symbol}</div>       <!-- Visible when flipped -->
+            <div class="card-inner" style="width:${cardSize}px; height:${cardSize}px;">
+                <div class="card-front" style="width:${cardSize}px; height:${cardSize}px; font-size:${Math.floor(cardSize / 2)}px;"></div>
+                <div class="card-back" style="width:${cardSize}px; height:${cardSize}px; font-size:${Math.floor(cardSize / 2)}px;">${symbol}</div>
             </div>
         `;
+
         card.dataset.symbol = symbol; // Store symbol for match checking
-        card.addEventListener("click", flipCard); // Add click event
+        card.addEventListener("click", flipCard);
         gameContainer.appendChild(card);
     });
 
@@ -77,8 +90,8 @@ function createBoard() {
     moves = 0;
     movesDisplay.textContent = `Moves: ${moves}`;
     statusText.textContent = "Find all matching pairs!";
-    startTimer(); // Start counting time
-};
+    startTimer();
+}
 
 
 // === 7 flip a card ===
@@ -156,3 +169,4 @@ difficultyButtons.forEach(btn => {
 
 // === 12 restart the game ===
 restartBtn.addEventListener("click", createBoard);
+
