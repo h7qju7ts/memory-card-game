@@ -83,7 +83,11 @@ body {
     color: yellow;
     background-color: forestgreen;
     padding: 10px;
-    font-weight: 200;
+    font-weight: 350;
     font-size: large;
     
+}
+
+h1 {
+    margin-top: auto;
 }
