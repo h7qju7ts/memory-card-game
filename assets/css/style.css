@@ -13,3 +13,11 @@ body {
     justify-content: center;
 }
 
+/* Card container with perspective for 3D flip */
+.card {
+    width: 100px;
+    height: 100px;
+    perspective: 600px;
+    cursor: pointer;
+}
+
