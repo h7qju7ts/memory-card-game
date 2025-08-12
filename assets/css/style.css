@@ -78,3 +78,12 @@ body {
 .difficulty:hover {
     background: #1f6391;
 }
+.restart-btn {
+    margin-top: 20px;
+    color: yellow;
+    background-color: forestgreen;
+    padding: 10px;
+    font-weight: 200;
+    font-size: large;
+    
+}

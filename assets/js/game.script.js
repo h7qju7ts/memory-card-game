@@ -43,48 +43,52 @@ function startTimer() {
     }, 1000); // Run every second
 };
 
+
+function calculateCardSize() {
+    const containerWidth = gameContainer.clientWidth;
+    const gap = 8; // Space between cards
+    const rawSize = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
+
+    // Limit card size between 60px (tiny screens) and 120px (large screens)
+    const cardSize = Math.max(60, Math.min(rawSize, 120));
+
+    return {
+        cardSize,
+        fontSize: Math.floor(cardSize * 0.5)
+    };
+}
 // === 6 create the game board ===
 function createBoard() {
-    // Get container width
-    const containerWidth = gameContainer.clientWidth;
-    const gapSize = 10; // gap between cards (in px)
-    
-    // Calculate card size dynamically based on columns and gap
-    const cardSize = Math.floor((containerWidth - (gapSize * (gridCols - 1))) / gridCols);
-
-    // Apply dynamic grid layout
+    // Calculate card size based on screen width and grid
+    const { cardSize, fontSize } = calculateCardSize();
     gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
-    gameContainer.style.gap = `${gapSize}px`;
+    gameContainer.style.gap = "8px";
 
     gameContainer.innerHTML = ""; // Clear old cards
 
-    // Determine number of total cards and pick that many symbols
     let totalCards = gridCols * gridRows;
-    let symbols = allSymbols.slice(0, totalCards / 2); // Half unique symbols
-    let cardSet = [...symbols, ...symbols]; // Two of each for matching
-    shuffle(cardSet); // Randomize order
+    let symbols = allSymbols.slice(0, totalCards / 2);
+    let cardSet = [...symbols, ...symbols];
+    shuffle(cardSet);
 
-    // Create HTML for each card
     cardSet.forEach(symbol => {
         const card = document.createElement("div");
         card.classList.add("card");
         card.style.width = `${cardSize}px`;
         card.style.height = `${cardSize}px`;
 
-        // Inner wrapper
         card.innerHTML = `
-            <div class="card-inner" style="width:${cardSize}px; height:${cardSize}px;">
-                <div class="card-front" style="width:${cardSize}px; height:${cardSize}px; font-size:${Math.floor(cardSize / 2)}px;"></div>
-                <div class="card-back" style="width:${cardSize}px; height:${cardSize}px; font-size:${Math.floor(cardSize / 2)}px;">${symbol}</div>
+            <div class="card-inner" style="width:${cardSize}px;height:${cardSize}px;">
+                <div class="card-front" style="width:${cardSize}px;height:${cardSize}px;font-size:${fontSize}px;"></div>
+                <div class="card-back" style="width:${cardSize}px;height:${cardSize}px;font-size:${fontSize}px;">${symbol}</div>
             </div>
         `;
 
-        card.dataset.symbol = symbol; // Store symbol for match checking
+        card.dataset.symbol = symbol;
         card.addEventListener("click", flipCard);
         gameContainer.appendChild(card);
     });
 
-    // Reset game state
     matchedCards = [];
     flippedCards = [];
     moves = 0;
@@ -92,6 +96,11 @@ function createBoard() {
     statusText.textContent = "Find all matching pairs!";
     startTimer();
 }
+
+// Auto-resize cards on window resize
+window.addEventListener("resize", () => {
+    createBoard();
+});
 
 
 // === 7 flip a card ===
