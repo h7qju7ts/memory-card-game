@@ -76,7 +76,7 @@ body {
     padding: 8px 12px;          /* Balanced padding */
     font-size: 1rem;
     white-space: nowrap;   
-    color: yellow;
+    color: #FFFACD;
     background-color: forestgreen;     /* Prevent text wrapping */
 }
 
@@ -92,7 +92,7 @@ body {
 }
 .restart-btn {
     margin-top: auto;
-    color: yellow;
+    color: #FFFACD;
     background-color: forestgreen;
     padding: 10px;
     font-weight: 350;
