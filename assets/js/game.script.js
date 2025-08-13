@@ -60,12 +60,23 @@ function calculateCardSize() {
 
 // === 7 create the game board ===
 function createBoard() {
-    // Calculate card size based on screen width and grid
+    // Auto-adjust rows if cards would overflow horizontally
+    const containerWidth = gameContainer.clientWidth;
+    let gap = 8;
+    let rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
+
+    // If cards would be smaller than 60px, add more rows to avoid tiny cards
+    while (rawCardWidth < 60) {
+        gridRows++;
+        gridCols = Math.ceil((gridCols * gridRows) / gridRows); // keep total card count reasonable
+        rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
+    }
+
+    // Recalculate with final gridCols
     const { cardSize, fontSize } = calculateCardSize();
     gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
-    gameContainer.style.gap = "8px";
-
-    gameContainer.innerHTML = ""; // Clear old cards
+    gameContainer.style.gap = `${gap}px`;
+    gameContainer.innerHTML = "";
 
     let totalCards = gridCols * gridRows;
     let symbols = allSymbols.slice(0, totalCards / 2);
@@ -98,13 +109,8 @@ function createBoard() {
     startTimer();
 }
 
-// Auto-resize cards on window resize
-window.addEventListener("resize", () => {
-    createBoard();
-});
 
-
-// === 7 flip a card ===
+// === 8 flip a card ===
 function flipCard() {
     // Prevent flipping more than 2 or flipping the same/matched card
     if (flippedCards.length >= 2 || this.classList.contains("flipped") || this.classList.contains("matched")) {
@@ -171,22 +177,8 @@ function updateScoreboard() {
 // === 11 difficulty selection ===
 difficultyButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-        const difficulty = btn.dataset.size; // easy, medium, hard
-
-        if (difficulty === "4") { // Easy: 4x4
-            gridCols = 4;
-            gridRows = 4;
-        } 
-        else if (difficulty === "5") { // Medium: 5x4
-            gridCols = 5;
-            gridRows = 4;
-        } 
-        else if (difficulty === "6") { // Hard: use extra row to avoid overflow
-            gridCols = 5;
-            gridRows = 6;
-        }
-
-        createBoard(); // Start new game with updated layout
+        totalCards = parseInt(btn.dataset.cards); // Example: 8, 16, 24, 36
+        createBoard(); // Let createBoard() decide rows/cols automatically
     });
 });
 
