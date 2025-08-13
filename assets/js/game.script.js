@@ -1,101 +1,109 @@
-// ===1 get all DOM elements we need ===
-const gameContainer = document.querySelector(".game-container");     // where all the cards will be placed
-const statusText = document.querySelector(".status");                // text telling player what is happening
-const restartBtn = document.querySelector(".restart-btn");           // button to restart the curent game
-const timerDisplay = document.querySelector(".timer");               // showes elapsed time
-const movesDisplay = document.querySelector(".moves");               // showes how many moves the player has made
-const scoreboardDisplay = document.querySelector(".scoreboard");     // showes the best scores from past games
-const difficultyButtons = document.querySelectorAll(".difficulty");  // buttons to select difficulty
+// === 1 Get all DOM elements we need ===
+// These store references to HTML elements so we can easily update them in the game.
+const gameContainer = document.querySelector(".game-container"); // Main grid where cards will be placed
+const statusText = document.querySelector(".status");            // Displays messages to the player (e.g., "You found a match!")
+const restartBtn = document.querySelector(".restart-btn");       // Button to restart the game
+const timerDisplay = document.querySelector(".timer");           // Shows elapsed time
+const movesDisplay = document.querySelector(".moves");           // Shows the number of moves taken
+const scoreboardDisplay = document.querySelector(".scoreboard"); // Displays best scores
+const difficultyButtons = document.querySelectorAll(".difficulty"); // Buttons to set game difficulty
 
+// === 2 Game state variables ===
+// These keep track of the current game state.
+let flippedCards = [];     // Holds the currently flipped cards (max 2 at a time)
+let matchedCards = [];     // Stores all cards that have been successfully matched
+let moves = 0;             // Number of moves made so far
+let timer = 0;             // Elapsed time in seconds
+let timerInterval = null;  // Stores the setInterval reference so we can stop/reset it
+let scoreboard = [];       // Stores top scores as objects: {time, moves, grid}
 
-// ===2 Game state variables ===
-let flippedCards = [];       //stores the two currently flipped cards so we can compare them
-let matchedCards = [];       //stores all the cards that  have been matched allready
-let moves = 0;               //number of mooves taken (two flips = one move) 
-let timer = 0;               //time in seconds since the game started
-let timerInterval = null;    //reference to setInterval() so we can stop it
-let scoreboard = [];         //stores top scores {time, moves, grid}
-// Difficulty settings
-let gridCols = 4;            //how many coumns in the grid         
-let gridRows = 4;            //how many rows in the grid
+// Difficulty settings (default: 4x4 grid)
+let gridCols = 4;                // Default columns
+let gridRows = 4;                // Default rows
+let totalCards = gridCols * gridRows; // Total cards = columns × rows
 
-
-// === 3 All avaible symbols(emojis) for the cards ===
-// list will be sliced dending on the selected difficulty
+// === 3 All available symbols (emojis) ===
+// These are the images/symbols we can put on cards.
+// For each game, we take only as many as needed for the chosen difficulty.
 const allSymbols = ["🍎", "🍌", "🍇", "🍒", "🍍", "🥝", "🍉", "🍑", "🥥", "🍓", "🍈", "🍐", "🍋", "🍊", "🥭"];
 
-// === 4 shuffle helper function ===
-// uses Fisher-Yates shuffle to randomize the order of elements in an aray
+// === 4 Shuffle helper ===
+// Implements the Fisher–Yates shuffle algorithm to randomize an array in-place.
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]]; // Swap positions
+        const j = Math.floor(Math.random() * (i + 1)); // Pick a random index
+        [array[i], array[j]] = [array[j], array[i]];   // Swap the elements
     }
-};
+}
 
-// === 5 start the timer ===
+// === 5 Start the timer ===
+// Resets and starts counting seconds, updating the timer display every second.
 function startTimer() {
-    clearInterval(timerInterval); // Prevent multiple timers from running
-    timer = 0;
+    clearInterval(timerInterval); // Make sure we don't run two timers
+    timer = 0;                    // Reset time
     timerInterval = setInterval(() => {
-        timer++;
-        timerDisplay.textContent = `Time: ${timer}s`; // Update the display
-    }, 1000); // Run every second
-};
+        timer++; // Increase by one second
+        timerDisplay.textContent = `Time: ${timer}s`; // Show new time
+    }, 1000); // Run every 1 second
+}
 
-// === 6 calculate card size based on screen width ===
-function calculateCardSize() {
-    const containerWidth = gameContainer.clientWidth;
-    const gap = 8; // Space between cards
-    const rawSize = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
-
-    // Limit card size between 60px (tiny screens) and 120px (large screens)
-    const cardSize = Math.max(60, Math.min(rawSize, 120));
-
-    return {
-        cardSize,
-        fontSize: Math.floor(cardSize * 0.5)
-    };
-};
-
-// === 7 create the game board ===
-
+// === 6 Create the game board (auto-sizing) ===
+// This function sets up the card grid based on available space and difficulty.
 function createBoard() {
-    const containerWidth = gameContainer.clientWidth;
-    const gap = 8;
+    const containerWidth = gameContainer.clientWidth;   // Available width
+    const containerHeight = gameContainer.clientHeight; // Available height
+    const gap = 8; // Space between cards in pixels
 
-    // Decide the best column count automatically
-    let gridCols = Math.floor(Math.sqrt(totalCards));
-    let gridRows = Math.ceil(totalCards / gridCols);
+    // Start with a roughly square grid layout
+    let localCols = Math.floor(Math.sqrt(totalCards));
+    let localRows = Math.ceil(totalCards / localCols);
+    let cardSize;
 
-    // Check if cards overflow horizontally, if yes, increase rows
-    let rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
-    while (rawCardWidth < 60) {
-        gridRows++;
-        gridCols = Math.ceil(totalCards / gridRows);
-        rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
+    // Dynamically adjust rows/columns to avoid horizontal/vertical overflow
+    while (true) {
+        let sizeByWidth = Math.floor((containerWidth - gap * (localCols - 1)) / localCols);
+        let sizeByHeight = Math.floor((containerHeight - gap * (localRows - 1)) / localRows);
+        cardSize = Math.min(sizeByWidth, sizeByHeight);
+
+        // If cards are too small horizontally → add rows
+        if (sizeByWidth < sizeByHeight && sizeByWidth < 60) {
+            localRows++;
+            localCols = Math.ceil(totalCards / localRows);
+        }
+        // If cards are too small vertically → add columns
+        else if (sizeByHeight < sizeByWidth && sizeByHeight < 60) {
+            localCols++;
+            localRows = Math.ceil(totalCards / localCols);
+        }
+        else {
+            break; // Fits well enough, stop adjusting
+        }
     }
 
-    // Final card size
-    const cardSize = Math.min(120, rawCardWidth);
-    const fontSize = Math.floor(cardSize * 0.5);
+    // Save final calculated grid size for win detection
+    gridCols = localCols;
+    gridRows = localRows;
 
+    const fontSize = Math.floor(cardSize * 0.5); // Emoji size based on card size
+
+    // Apply CSS grid styles
     gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
     gameContainer.style.gap = `${gap}px`;
-    gameContainer.innerHTML = "";
+    gameContainer.innerHTML = ""; // Clear old board
 
-    // Prepare card symbols
+    // Select only needed symbols → duplicate them → shuffle
     let symbols = allSymbols.slice(0, totalCards / 2);
     let cardSet = [...symbols, ...symbols];
     shuffle(cardSet);
 
-    // Create cards
+    // Create each card element
     cardSet.forEach(symbol => {
         const card = document.createElement("div");
         card.classList.add("card");
         card.style.width = `${cardSize}px`;
         card.style.height = `${cardSize}px`;
 
+        // Inner HTML: front face (empty), back face (emoji)
         card.innerHTML = `
             <div class="card-inner" style="width:${cardSize}px;height:${cardSize}px;">
                 <div class="card-front" style="width:${cardSize}px;height:${cardSize}px;font-size:${fontSize}px;"></div>
@@ -103,12 +111,12 @@ function createBoard() {
             </div>
         `;
 
-        card.dataset.symbol = symbol;
-        card.addEventListener("click", flipCard);
-        gameContainer.appendChild(card);
+        card.dataset.symbol = symbol;          // Store symbol for matching check
+        card.addEventListener("click", flipCard); // Add click handler
+        gameContainer.appendChild(card);       // Add to the game grid
     });
 
-    // Reset state
+    // Reset game state
     matchedCards = [];
     flippedCards = [];
     moves = 0;
@@ -117,41 +125,37 @@ function createBoard() {
     startTimer();
 }
 
-// Auto-resize on window resize
-window.addEventListener("resize", () => createBoard());
-
-
-// === 8 flip a card ===
+// === 7 Flip a card ===
+// Handles when a player clicks a card.
 function flipCard() {
-    // Prevent flipping more than 2 or flipping the same/matched card
+    // Prevent flipping more than 2 cards or flipping matched/already flipped ones
     if (flippedCards.length >= 2 || this.classList.contains("flipped") || this.classList.contains("matched")) {
         return;
     }
 
-    // Show the card
-    this.classList.add("flipped");
-    flippedCards.push(this); // Add to flipped cards list
+    this.classList.add("flipped"); // Show the card
+    flippedCards.push(this);       // Add to flipped list
 
-    // If two cards are flipped, check for a match
+    // If two cards are flipped → check for a match
     if (flippedCards.length === 2) {
         moves++;
         movesDisplay.textContent = `Moves: ${moves}`;
         checkMatch();
     }
-};
+}
 
-// === 8 check if the two flipped cards match ===
+// === 8 Check for a match ===
 function checkMatch() {
     const [card1, card2] = flippedCards;
 
     if (card1.dataset.symbol === card2.dataset.symbol) {
-        // Match found
+        //  They match
         card1.classList.add("matched");
         card2.classList.add("matched");
         matchedCards.push(card1, card2);
         statusText.textContent = "You found a match!";
 
-        // Check if the game is over
+        // Win condition: all cards matched
         if (matchedCards.length === gridCols * gridRows) {
             clearInterval(timerInterval);
             statusText.textContent = "🎉 You won!";
@@ -159,7 +163,7 @@ function checkMatch() {
             updateScoreboard();
         }
     } else {
-        // Not a match: flip back after a short delay
+        //  Not a match → flip them back after delay
         statusText.textContent = "Not a match!";
         setTimeout(() => {
             card1.classList.remove("flipped");
@@ -167,29 +171,36 @@ function checkMatch() {
         }, 800);
     }
 
-    flippedCards = []; // Reset for the next turn
-};
-
-// === 9 save the score ===
-function saveScore(time, moves) {
-    scoreboard.push({ time, moves, grid: `${gridCols}x${gridRows}` });
-    scoreboard.sort((a, b) => a.time - b.time || a.moves - b.moves); // Sort by best time, then moves
-    if (scoreboard.length > 5) scoreboard.length = 5; // Keep only top 5
+    flippedCards = []; // Reset flipped list
 }
 
+// === 9 Save the score ===
+// Adds score to scoreboard and keeps only top 5 best scores.
+function saveScore(time, moves) {
+    scoreboard.push({ time, moves, grid: `${gridCols}x${gridRows}` });
+    // Sort by time first, then moves
+    scoreboard.sort((a, b) => a.time - b.time || a.moves - b.moves);
+    if (scoreboard.length > 5) scoreboard.length = 5; // Keep only best 5
+}
 
-// === 10 update the scoreboard display ===
+// === 10 Update scoreboard ===
+// Renders the scoreboard in HTML
 function updateScoreboard() {
     scoreboardDisplay.innerHTML = "<h3>Top Scores</h3>" +
         scoreboard.map((s, i) => `<div>${i + 1}. ${s.grid} - ${s.time}s, ${s.moves} moves</div>`).join("");
-};
+}
 
-
-// === 11 difficulty selection ===
+// === 11 Difficulty selection ===
+// Changes total cards based on selected difficulty and rebuilds the board.
 difficultyButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-        totalCards = parseInt(btn.dataset.cards); // Example: 8, 16, 24, 36
-        createBoard(); // Let createBoard() decide rows/cols automatically
+        totalCards = parseInt(btn.dataset.cards);
+        createBoard();
     });
 });
 
+// Auto-resize board when window size changes
+window.addEventListener("resize", createBoard);
+
+// Create the first board on page load
+createBoard();
