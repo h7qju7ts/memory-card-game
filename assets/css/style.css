@@ -69,32 +69,29 @@ body {
     margin-bottom: 15px;
 }
 
-.difficulty-container {
-    display: flex;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-    gap: 8px;        /* Space between buttons */
-    justify-content: center;
-    margin: 10px 0;
+.difficulty {
+    flex: 1 1 auto;             /* Allow shrinking/growing */
+    max-width: 120px;           /* Keep them from being too wide */
+    min-width: 80px;            /* Still clickable on small screens */
+    padding: 8px 12px;          /* Balanced padding */
+    font-size: 1rem;
+    white-space: nowrap;   
+    color: yellow;
+    background-color: forestgreen;     /* Prevent text wrapping */
 }
 
-.difficulty {
-    flex: 1 1 auto;  /* Allow shrinking and wrapping */
-    min-width: 50px; /* Prevent buttons from becoming too small */
-    padding: 2px;
-    margin: 0 5px;
-    background: #2980b9;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
+.difficulty-container {
+    display: flex;
+    flex-wrap: wrap;            /* Let them wrap on narrow screens */
+    gap: 8px;                   /* Space between buttons */
+    justify-content: center;    /* Center alignment */
 }
 
 .difficulty:hover {
     background: #1f6391;
 }
 .restart-btn {
-    margin-top: 20px;
+    margin-top: auto;
     color: yellow;
     background-color: forestgreen;
     padding: 10px;
@@ -105,4 +102,13 @@ body {
 
 h1 {
     margin-top: auto;
+}
+
+/* Media querries */
+
+@media (max-width: 400px) {
+    .difficulty {
+        flex: 1 1 45%;          /* Two per row on very small screens */
+        max-width: none;
+    }
 }
