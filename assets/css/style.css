@@ -79,8 +79,8 @@ body {
 
 .difficulty {
     flex: 1 1 auto;  /* Allow shrinking and wrapping */
-    min-width: 100px; /* Prevent buttons from becoming too small */
-    padding: 10px;
+    min-width: 50px; /* Prevent buttons from becoming too small */
+    padding: 2px;
     margin: 0 5px;
     background: #2980b9;
     color: white;

@@ -59,24 +59,29 @@ function createBoard() {
     let localRows = Math.ceil(totalCards / localCols);
     let cardSize;
 
+    let attempts = 0; // Prevent infinite loop
+
     // Dynamically adjust rows/columns to avoid horizontal/vertical overflow
     while (true) {
+        attempts++;
+        if (attempts > 50) break; // Emergency stop to prevent freezing
+
         let sizeByWidth = Math.floor((containerWidth - gap * (localCols - 1)) / localCols);
         let sizeByHeight = Math.floor((containerHeight - gap * (localRows - 1)) / localRows);
         cardSize = Math.min(sizeByWidth, sizeByHeight);
 
-        // If cards are too small horizontally → add rows
-        if (sizeByWidth < sizeByHeight && sizeByWidth < 60) {
+        // First priority → avoid horizontal overflow
+        if (sizeByWidth * localCols + gap * (localCols - 1) > containerWidth) {
             localRows++;
             localCols = Math.ceil(totalCards / localRows);
         }
-        // If cards are too small vertically → add columns
-        else if (sizeByHeight < sizeByWidth && sizeByHeight < 60) {
+        // Second priority → avoid vertical overflow if possible
+        else if (sizeByHeight < 50) {
             localCols++;
             localRows = Math.ceil(totalCards / localCols);
         }
         else {
-            break; // Fits well enough, stop adjusting
+            break; // Fits well enough
         }
     }
 
