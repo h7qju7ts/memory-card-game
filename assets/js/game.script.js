@@ -59,30 +59,37 @@ function calculateCardSize() {
 };
 
 // === 7 create the game board ===
-function createBoard() {
-    // Auto-adjust rows if cards would overflow horizontally
-    const containerWidth = gameContainer.clientWidth;
-    let gap = 8;
-    let rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
 
-    // If cards would be smaller than 60px, add more rows to avoid tiny cards
+function createBoard() {
+    const containerWidth = gameContainer.clientWidth;
+    const gap = 8;
+
+    // Decide the best column count automatically
+    let gridCols = Math.floor(Math.sqrt(totalCards));
+    let gridRows = Math.ceil(totalCards / gridCols);
+
+    // Check if cards overflow horizontally, if yes, increase rows
+    let rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
     while (rawCardWidth < 60) {
         gridRows++;
-        gridCols = Math.ceil((gridCols * gridRows) / gridRows); // keep total card count reasonable
+        gridCols = Math.ceil(totalCards / gridRows);
         rawCardWidth = Math.floor((containerWidth - (gap * (gridCols - 1))) / gridCols);
     }
 
-    // Recalculate with final gridCols
-    const { cardSize, fontSize } = calculateCardSize();
+    // Final card size
+    const cardSize = Math.min(120, rawCardWidth);
+    const fontSize = Math.floor(cardSize * 0.5);
+
     gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
     gameContainer.style.gap = `${gap}px`;
     gameContainer.innerHTML = "";
 
-    let totalCards = gridCols * gridRows;
+    // Prepare card symbols
     let symbols = allSymbols.slice(0, totalCards / 2);
     let cardSet = [...symbols, ...symbols];
     shuffle(cardSet);
 
+    // Create cards
     cardSet.forEach(symbol => {
         const card = document.createElement("div");
         card.classList.add("card");
@@ -101,6 +108,7 @@ function createBoard() {
         gameContainer.appendChild(card);
     });
 
+    // Reset state
     matchedCards = [];
     flippedCards = [];
     moves = 0;
@@ -108,6 +116,9 @@ function createBoard() {
     statusText.textContent = "Find all matching pairs!";
     startTimer();
 }
+
+// Auto-resize on window resize
+window.addEventListener("resize", () => createBoard());
 
 
 // === 8 flip a card ===
