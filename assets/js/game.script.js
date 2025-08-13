@@ -1,114 +1,138 @@
-// === 1 Get all DOM elements we need ===
-// These store references to HTML elements so we can easily update them in the game.
-const gameContainer = document.querySelector(".game-container"); // Main grid where cards will be placed
-const statusText = document.querySelector(".status");            // Displays messages to the player (e.g., "You found a match!")
-const restartBtn = document.querySelector(".restart-btn");       // Button to restart the game
-const timerDisplay = document.querySelector(".timer");           // Shows elapsed time
-const movesDisplay = document.querySelector(".moves");           // Shows the number of moves taken
-const scoreboardDisplay = document.querySelector(".scoreboard"); // Displays best scores
-const difficultyButtons = document.querySelectorAll(".difficulty"); // Buttons to set game difficulty
+/***********************************************************
+ * 1. DOM ELEMENT REFERENCES
+ * These lines select key parts of the HTML so we can update
+ * or interact with them in the game.
+ ***********************************************************/
+const gameContainer = document.querySelector(".game-container");
+const statusText = document.querySelector(".status");
+const restartBtn = document.querySelector(".restart-btn");
+const timerDisplay = document.querySelector(".timer");
+const movesDisplay = document.querySelector(".moves");
+const scoreboardDisplay = document.querySelector(".scoreboard");
+const difficultyButtons = document.querySelectorAll(".difficulty");
 
-// === 2 Game state variables ===
-// These keep track of the current game state.
-let flippedCards = [];     // Holds the currently flipped cards (max 2 at a time)
-let matchedCards = [];     // Stores all cards that have been successfully matched
-let moves = 0;             // Number of moves made so far
-let timer = 0;             // Elapsed time in seconds
-let timerInterval = null;  // Stores the setInterval reference so we can stop/reset it
-let scoreboard = [];       // Stores top scores as objects: {time, moves, grid}
+/***********************************************************
+ * 2. GAME STATE VARIABLES
+ * Variables here will keep track of the game’s internal state
+ * such as flipped cards, matched pairs, moves, and timer.
+ ***********************************************************/
+let flippedCards = [];   // Cards currently turned over but not yet checked
+let matchedCards = [];   // Cards already matched and locked
+let moves = 0;           // Number of card flips the player has made
+let timer = 0;           // Seconds elapsed since game start
+let timerInterval = null;// Will store the timer setInterval reference
+let scoreboard = [];     // Array to store best scores
 
-// Difficulty settings (default: 4x4 grid)
-let gridCols = 4;                // Default columns
-let gridRows = 4;                // Default rows
-let totalCards = gridCols * gridRows; // Total cards = columns × rows
+// Default difficulty: 4x4 = 16 cards
+let gridCols = 4;
+let gridRows = 4;
+let totalCards = gridCols * gridRows;
 
-// === 3 All available symbols (emojis) ===
-// These are the images/symbols we can put on cards.
-// For each game, we take only as many as needed for the chosen difficulty.
-const allSymbols = ["🍎", "🍌", "🍇", "🍒", "🍍", "🥝", "🍉", "🍑", "🥥", "🍓", "🍈", "🍐", "🍋", "🍊", "🥭"];
+// Keep track of the last chosen difficulty for restarting
+let lastDifficulty = { totalCards, gridCols, gridRows };
 
-// === 4 Shuffle helper ===
-// Implements the Fisher–Yates shuffle algorithm to randomize an array in-place.
+/***********************************************************
+ * 3. CARD SYMBOLS
+ * We use emojis for card faces. This list must contain at
+ * least half as many unique symbols as the hardest difficulty.
+ ***********************************************************/
+const allSymbols = [
+    "🍎", "🍌", "🍇", "🍒", "🍍",
+    "🥝", "🍉", "🍑", "🥥", "🍓",
+    "🍈", "🍐", "🍋", "🍊", "🥭"
+];
+
+/***********************************************************
+ * 4. SHUFFLE FUNCTION
+ * Fisher-Yates algorithm to randomize the order of items
+ ***********************************************************/
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1)); // Pick a random index
-        [array[i], array[j]] = [array[j], array[i]];   // Swap the elements
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
 }
 
-// === 5 Start the timer ===
-// Resets and starts counting seconds, updating the timer display every second.
+/***********************************************************
+ * 5. TIMER START
+ * Resets and starts a new timer every time a game begins.
+ ***********************************************************/
 function startTimer() {
-    clearInterval(timerInterval); // Make sure we don't run two timers
-    timer = 0;                    // Reset time
+    clearInterval(timerInterval); // Make sure no old timer runs
+    timer = 0;
+    timerDisplay.textContent = `Time: ${timer}s`;
     timerInterval = setInterval(() => {
-        timer++; // Increase by one second
-        timerDisplay.textContent = `Time: ${timer}s`; // Show new time
-    }, 1000); // Run every 1 second
+        timer++;
+        timerDisplay.textContent = `Time: ${timer}s`;
+    }, 1000);
 }
 
-// === 6 Create the game board (auto-sizing) ===
-// This function sets up the card grid based on available space and difficulty.
+/***********************************************************
+ * 6. CREATE GAME BOARD
+ * Dynamically creates the grid and calculates card size so
+ * the board fits any screen without overflow.
+ ***********************************************************/
 function createBoard() {
-    const containerWidth = gameContainer.clientWidth;   // Available width
-    const containerHeight = gameContainer.clientHeight; // Available height
-    const gap = 8; // Space between cards in pixels
+    const containerWidth = gameContainer.clientWidth;
+    const containerHeight = gameContainer.clientHeight;
+    const gap = 8; // space between cards in px
 
-    // Start with a roughly square grid layout
+    // Start with a roughly square layout
     let localCols = Math.floor(Math.sqrt(totalCards));
     let localRows = Math.ceil(totalCards / localCols);
     let cardSize;
+    let attempts = 0;
 
-    let attempts = 0; // Prevent infinite loop
-
-    // Dynamically adjust rows/columns to avoid horizontal/vertical overflow
+    // Adjust number of rows/columns until cards fit nicely
     while (true) {
         attempts++;
-        if (attempts > 50) break; // Emergency stop to prevent freezing
+        if (attempts > 50) break; // safety break to avoid infinite loops
 
         let sizeByWidth = Math.floor((containerWidth - gap * (localCols - 1)) / localCols);
         let sizeByHeight = Math.floor((containerHeight - gap * (localRows - 1)) / localRows);
         cardSize = Math.min(sizeByWidth, sizeByHeight);
 
-        // First priority → avoid horizontal overflow
+        // If too wide → add more rows
         if (sizeByWidth * localCols + gap * (localCols - 1) > containerWidth) {
             localRows++;
             localCols = Math.ceil(totalCards / localRows);
         }
-        // Second priority → avoid vertical overflow if possible
+        // If too short → add more columns
         else if (sizeByHeight < 50) {
             localCols++;
             localRows = Math.ceil(totalCards / localCols);
         }
         else {
-            break; // Fits well enough
+            break; // Good fit found
         }
     }
 
-    // Save final calculated grid size for win detection
+    // Save the final grid size
     gridCols = localCols;
     gridRows = localRows;
 
-    const fontSize = Math.floor(cardSize * 0.5); // Emoji size based on card size
+    // Font size inside the cards
+    const fontSize = Math.floor(cardSize * 0.5);
 
-    // Apply CSS grid styles
+    // Apply CSS grid layout to the game container
     gameContainer.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
     gameContainer.style.gap = `${gap}px`;
-    gameContainer.innerHTML = ""; // Clear old board
 
-    // Select only needed symbols → duplicate them → shuffle
+    // Clear any old cards from the container
+    gameContainer.innerHTML = "";
+
+    // Get the symbols needed for this game
     let symbols = allSymbols.slice(0, totalCards / 2);
-    let cardSet = [...symbols, ...symbols];
+    let cardSet = [...symbols, ...symbols]; // duplicate to create pairs
     shuffle(cardSet);
 
-    // Create each card element
+    // Create each card and attach click event
     cardSet.forEach(symbol => {
         const card = document.createElement("div");
         card.classList.add("card");
         card.style.width = `${cardSize}px`;
         card.style.height = `${cardSize}px`;
 
-        // Inner HTML: front face (empty), back face (emoji)
         card.innerHTML = `
             <div class="card-inner" style="width:${cardSize}px;height:${cardSize}px;">
                 <div class="card-front" style="width:${cardSize}px;height:${cardSize}px;font-size:${fontSize}px;"></div>
@@ -116,32 +140,38 @@ function createBoard() {
             </div>
         `;
 
-        card.dataset.symbol = symbol;          // Store symbol for matching check
-        card.addEventListener("click", flipCard); // Add click handler
-        gameContainer.appendChild(card);       // Add to the game grid
+        card.dataset.symbol = symbol;
+        card.addEventListener("click", flipCard);
+        gameContainer.appendChild(card);
     });
 
-    // Reset game state
+    // Reset state variables for the new game
     matchedCards = [];
     flippedCards = [];
     moves = 0;
     movesDisplay.textContent = `Moves: ${moves}`;
     statusText.textContent = "Find all matching pairs!";
+
+    // Start the timer
     startTimer();
 }
 
-// === 7 Flip a card ===
-// Handles when a player clicks a card.
+/***********************************************************
+ * 7. FLIP CARD
+ * Handles the logic when a player clicks a card.
+ ***********************************************************/
 function flipCard() {
-    // Prevent flipping more than 2 cards or flipping matched/already flipped ones
+    // Block flipping if:
+    // - Already 2 cards are flipped
+    // - This card is already flipped or matched
     if (flippedCards.length >= 2 || this.classList.contains("flipped") || this.classList.contains("matched")) {
         return;
     }
 
-    this.classList.add("flipped"); // Show the card
-    flippedCards.push(this);       // Add to flipped list
+    this.classList.add("flipped");
+    flippedCards.push(this);
 
-    // If two cards are flipped → check for a match
+    // If two cards are flipped, check for a match
     if (flippedCards.length === 2) {
         moves++;
         movesDisplay.textContent = `Moves: ${moves}`;
@@ -149,12 +179,15 @@ function flipCard() {
     }
 }
 
-// === 8 Check for a match ===
+/***********************************************************
+ * 8. CHECK MATCH
+ * Compares two flipped cards and decides if they match.
+ ***********************************************************/
 function checkMatch() {
     const [card1, card2] = flippedCards;
 
     if (card1.dataset.symbol === card2.dataset.symbol) {
-        //  They match
+        // Cards match → lock them as matched
         card1.classList.add("matched");
         card2.classList.add("matched");
         matchedCards.push(card1, card2);
@@ -168,7 +201,7 @@ function checkMatch() {
             updateScoreboard();
         }
     } else {
-        //  Not a match → flip them back after delay
+        // No match → flip them back after delay
         statusText.textContent = "Not a match!";
         setTimeout(() => {
             card1.classList.remove("flipped");
@@ -176,36 +209,62 @@ function checkMatch() {
         }, 800);
     }
 
-    flippedCards = []; // Reset flipped list
+    flippedCards = [];
 }
 
-// === 9 Save the score ===
-// Adds score to scoreboard and keeps only top 5 best scores.
+/***********************************************************
+ * 9. SAVE SCORE
+ * Stores player’s result and keeps only the top 5.
+ ***********************************************************/
 function saveScore(time, moves) {
     scoreboard.push({ time, moves, grid: `${gridCols}x${gridRows}` });
-    // Sort by time first, then moves
     scoreboard.sort((a, b) => a.time - b.time || a.moves - b.moves);
-    if (scoreboard.length > 5) scoreboard.length = 5; // Keep only best 5
+    if (scoreboard.length > 5) scoreboard.length = 5;
 }
 
-// === 10 Update scoreboard ===
-// Renders the scoreboard in HTML
+/***********************************************************
+ * 10. UPDATE SCOREBOARD DISPLAY
+ ***********************************************************/
 function updateScoreboard() {
     scoreboardDisplay.innerHTML = "<h3>Top Scores</h3>" +
         scoreboard.map((s, i) => `<div>${i + 1}. ${s.grid} - ${s.time}s, ${s.moves} moves</div>`).join("");
 }
 
-// === 11 Difficulty selection ===
-// Changes total cards based on selected difficulty and rebuilds the board.
+/***********************************************************
+ * 11. DIFFICULTY BUTTON CLICK HANDLER
+ ***********************************************************/
 difficultyButtons.forEach(btn => {
     btn.addEventListener("click", () => {
         totalCards = parseInt(btn.dataset.cards);
+        gridCols = Math.sqrt(totalCards);
+        gridRows = totalCards / gridCols;
+
+        // Save difficulty so Restart knows what to use
+        lastDifficulty = { totalCards, gridCols, gridRows };
         createBoard();
     });
 });
 
-// Auto-resize board when window size changes
+/***********************************************************
+ * 12. RESTART BUTTON
+ * Uses lastDifficulty to restart with same settings.
+ ***********************************************************/
+restartBtn.addEventListener("click", () => {
+    totalCards = lastDifficulty.totalCards;
+    gridCols = lastDifficulty.gridCols;
+    gridRows = lastDifficulty.gridRows;
+    createBoard();
+});
+
+/***********************************************************
+ * 13. RESPONSIVE RESIZE
+ * Rebuilds board when window size changes.
+ ***********************************************************/
 window.addEventListener("resize", createBoard);
 
-// Create the first board on page load
+/***********************************************************
+ * 14. INITIAL GAME START
+ * Creates the first board automatically on page load.
+ ***********************************************************/
+lastDifficulty = { totalCards, gridCols, gridRows };
 createBoard();
