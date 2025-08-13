@@ -43,7 +43,7 @@ function startTimer() {
     }, 1000); // Run every second
 };
 
-
+// === 6 calculate card size based on screen width ===
 function calculateCardSize() {
     const containerWidth = gameContainer.clientWidth;
     const gap = 8; // Space between cards
@@ -56,8 +56,9 @@ function calculateCardSize() {
         cardSize,
         fontSize: Math.floor(cardSize * 0.5)
     };
-}
-// === 6 create the game board ===
+};
+
+// === 7 create the game board ===
 function createBoard() {
     // Calculate card size based on screen width and grid
     const { cardSize, fontSize } = calculateCardSize();
