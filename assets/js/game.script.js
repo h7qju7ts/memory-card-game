@@ -171,12 +171,22 @@ function updateScoreboard() {
 // === 11 difficulty selection ===
 difficultyButtons.forEach(btn => {
     btn.addEventListener("click", () => {
-        gridCols = parseInt(btn.dataset.size); // Read size from button
-        gridRows = 4; // Fixed rows
-        createBoard(); // Start a new game with selected difficulty
+        const difficulty = btn.dataset.size; // easy, medium, hard
+
+        if (difficulty === "4") { // Easy: 4x4
+            gridCols = 4;
+            gridRows = 4;
+        } 
+        else if (difficulty === "5") { // Medium: 5x4
+            gridCols = 5;
+            gridRows = 4;
+        } 
+        else if (difficulty === "6") { // Hard: use extra row to avoid overflow
+            gridCols = 5;
+            gridRows = 6;
+        }
+
+        createBoard(); // Start new game with updated layout
     });
 });
-
-// === 12 restart the game ===
-restartBtn.addEventListener("click", createBoard);
 
