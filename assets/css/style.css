@@ -18,7 +18,11 @@ body {
 
 .game-container {
     display: grid;
-    justify-content: center;
+    place-content: center;
+    margin: 20px auto;
+    height: calc(100vh - 300px); /* Adjust depending on header/instructions height */
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* Card container with perspective for 3D flip */
