@@ -76,8 +76,7 @@ body {
     padding: 8px 12px;          /* Balanced padding */
     font-size: 1rem;
     white-space: nowrap;   
-    color: #FFD700;
-    background-color: forestgreen;     /* Prevent text wrapping */
+         /* Prevent text wrapping */
 }
 
 .difficulty-container {
@@ -87,13 +86,25 @@ body {
     justify-content: center;    /* Center alignment */
 }
 
-.difficulty:hover {
+/* .difficulty:hover {
     background: #1f6391;
+} */
+
+button {
+  background-color: #FFFFFF;  /* White background */
+  color: #228B22;            /* Forest green text */
+  border: 2px solid #228B22;
+  font-weight: bold;
 }
+
+button:hover {
+  background-color: #FFD700; /* Pale gold on hover */
+  color: #000000;            /* Black text for contrast */
+}
+
 .restart-btn {
     margin-top: auto;
-    color: #FFD700;
-    background-color: forestgreen;
+    
     padding: 10px;
     font-weight: 350;
     font-size: large;
